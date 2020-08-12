@@ -986,7 +986,15 @@ where
                         // Try to parse short args like normal, if AllowLeadingHyphen or
                         // AllowNegativeNumbers is set, parse_short_arg will *not* throw
                         // an error, and instead return Ok(None)
-                        needs_val_of = self.parse_short_arg(matcher, &arg_os)?;
+                        let short_result = self.parse_short_arg(matcher, &arg_os);
+                        match short_result {
+                            Err(e) if e.kind == ErrorKind::UnknownArgument => {
+                                needs_val_of = self.parse_long_arg(matcher, &arg_os, it)?;
+                            }
+                            _ => {
+                                needs_val_of = short_result?;
+                            }
+                        }
                         // If it's None, we then check if one of those two AppSettings was set
                         debugln!(
                             "Parser:get_matches_with: After parse_short_arg {:?}",
